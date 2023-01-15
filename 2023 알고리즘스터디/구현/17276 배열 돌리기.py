@@ -35,7 +35,7 @@ for _ in range(t):
 
 	total_array.extend(new_array)
 
-for i in range(len(total_array)):
-	for j in range(n):
-		print(total_array[i][j], end = ' ')
-	print()
+	for i in range(n):
+		for j in range(n):
+			print(total_array[i][j], end = ' ')
+		print()
