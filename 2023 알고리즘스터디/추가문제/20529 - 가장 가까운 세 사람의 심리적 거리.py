@@ -1,4 +1,5 @@
-# 20529 - 가장 가까운 세 사람의 심리적 거리
+# 20529 - 가장 가까운 세 사람의 심리적 거리 # 시간초과 풀ㅇ
+
 from itertools import combinations
 import time
 start = time.time()
