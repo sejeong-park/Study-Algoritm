@@ -1,4 +1,5 @@
 # 정렬 유형을 정리햅자
+import heapq
 
 # 거품 정렬
 def BubbleSort(x) :
@@ -98,6 +99,17 @@ def countSort(x):
 
 	return output
 
+def heapSort(x):
+	queue , result = [] , []
+	for i in x:
+		heapq.heappush(queue, i)
+	for i in range(len(queue)):
+		result.append(heapq.heappop(queue))
+
+	return result
+
+
+
 input = ['apple', 'cat', 'fox', 'banana', 'spring', 'hello', 'world']
 print(BubbleSort(input))
 print(QuickSort_1(input))
@@ -105,3 +117,4 @@ print(insertionSort(input))
 print(mergeSort(input))
 count_input = [7,5,9,0,3,1,6,2,9,1,4,8,0,5,2]
 print(countSort(count_input))
+print(heapSort(input))
