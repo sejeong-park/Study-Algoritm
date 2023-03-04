@@ -40,6 +40,8 @@ while True:
 	visited = [[False] * 6 for _ in range(12)]
 	check = False
 	for i in range(11,-1,-1):
+
+
 		for j in range(6):
 			if array[i][j] != '.' and not visited[i][j]:
 				puyo_set = bfs(i,j)
