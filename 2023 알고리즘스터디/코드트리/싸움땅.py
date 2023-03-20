@@ -1,135 +1,184 @@
-# 싸움 땅
+# 싸움땅 : 2022년 하반기 오전 1번 문제
+import sys
+"""
+총의 공격력, 플레이어의 초기 능력치, 플레이어의 번호
+1. 플레이어의 이동
+- 첫번째 플레이어부터 순차적으로 본인이 향하고 잇는 방향대로 한칸만큼 이동
+	- 해당 방향으로 나갈 때 격자를 벗어나는 경우 정반대 방향으로 바꾸어서 1만큼 이동
+case1 : 이동한 방향에 플레이어가 없다면, 해당 칸에 총이 있는지 확인
+	- 만약 총이 있는 경우, 해당 플레이어는 총 획득
+	- 플레이어가 총을 이미 가지고 있는 경우, 공격력이 더 쎈 총 획득, 총을 해당 격자에 놓는다.
+case2 : 이동한 방향에 플레이어가 있는 경우
+	- 두 플레이어가 싸운다.
+	- 해당 플레이어의 초기 능력치와 가지고 있는 총의 공격력의 합 비교 -> 더 큰 플레이어 승
+	- 능력치가 같은 경우, 초기 능력치가 높은 플레이어 승
+	- POINT : 각 플레이어의 초기 능력치와 가지고 있는 총의 공격력의 합의 차이
+	
+2. 진 플레이어
+- 자신이 가지고 있는 총을, 해당 격자에 내려놓고, 해당 플레이어가 원래 가지고 있던 방향대로 한칸 이동
+	- 만약 이동하려는 칸에 다른 플레이어가 있거나, 격자 범위 밖인 경우, 오른쪽으로 90도 회전 / 빈칸이 보이는 순간 이동
+	- 만약 해당 칸에 총이 있다면 해당 플레이어는 가장 공격력이 높은 총을 획득 / 나머지 총을 바닥에 놓는다.
+	
+3. 이긴 플레이어
+- 승리한 칸에 떨어져 있는 총들과 원래 들고 있던 총 중 가장 공격력이 높은 총을 획득
+- 나머지 총 격자에 내려 놓음
+"""
+
 
 n, m, k = map(int, input().split())
-location = [[0] * n for _ in range(n)]	# 플레이어의 위치
-players = {}
-points = [0] * (n+1)
-
-array = []
-for i in range(n):
-	lists = list(map(int, input().split()))
-	lines = []
-	for j in range(n):
-		if lists[j] != 0:
-			lines.append([lists[j]])
+array = [[]*n for _ in range(n)]
+for x in range(n) :
+	line = list(map(int, input().split()))
+	for y in range(n) :
+		if line[y] == 0 :
+			gun = []
 		else:
-			lines.append([])
-	array.append(lines)
+			gun = [line[y]]
+		array[x].append([0,gun])
 
-print(array)
-
+player = {}
+for num in range(m) :
+	x, y, d, s = map(int, input().split())
+	player[num+1] = [x-1, y-1, d, s, 0] # 총까지
+	array[x-1][y-1][0] = num+1 # number 적어주기
+# print("original")
+# for i in range(n) :
+# 	print(*array[i])
+# print(player)
+# print()
+# 상, 우, 하, 좌
 dx = [-1, 0, 1, 0]
 dy = [0, 1, 0, -1]
 
-for i in range(m):
-	x, y, d, s = map(int, input().split())
-	players[i+1] = [x-1, y-1, d, s, 0]
-	location[x-1][y-1] = i+1
+def get_gun(x, y, g) :
+	# 자신의 총의 값을 준다.
+	if g != 0 :
+		array[x][y][1].append(g)
+	if len(array[x][y][1]) > 0:
+		max_gun = max(array[x][y][1])
+		array[x][y][1].remove(max_gun)  # 가져갈 최대값 gun을 뺀다
 
-print(location)
-print("초기값" , players)
-print('-------------')
-def get_gun(num):
-	x, y, d, s, g = players[num]
+		return max_gun
+	else:
+		return 0
 
-	# 내가 총이 있다면
-	if g != 0:
-		array[x][y].append(g)
-
-	array[x][y].sort(reverse = True)
-	print(array[x][y], x, y)
-	new_g = array[x][y].pop(0)
-
-	players[num][-1] = new_g	# 무기 갱신해주기
 
 def loser_move(num) :
-	x, y, d, s, g = players[num]
+	"""
+	진 사람의 이동
+	- 자신이 가지고 있는 총을, 해당 격자에 내려놓고, 해당 플레이어가 원래 가지고 있던 방향대로 한칸 이동
+		- 만약 이동하려는 칸에 다른 플레이어가 있거나, 격자 범위 밖인 경우, 오른쪽으로 90도 회전 / 빈칸이 보이는 순간 이동
+		- 만약 해당 칸에 총이 있다면 해당 플레이어는 가장 공격력이 높은 총을 획득 / 나머지 총을 바닥에 놓는다.
+	"""
+	x, y, d, s, g = player[num]
 
+	# 1. 자신이 가지고 있던 총을 해당 격자에 내려놓는다.
 	if g != 0 :
-		array[x][y].append(g)
+		array[x][y][1].append(g) # 총 해당 격자에 내려 놓는다.
+	g = 0
 
+	# 2. 원래 가지고 있던 방향대로 한 칸 이동
+	for i in range(4) :
+		nd = (d+i) % 4
+		nx = x + dx[nd]
+		ny = y + dy[nd]
+		# 범위에 해당하는 칸을 찾으면 바로 종료
+		if 0 <= nx < n and 0 <= ny < n and array[nx][ny][0] == 0:
+			break
+
+	# 3. 만약 이동할 칸에 총이 있다면 공격력이 가장 높은 총을 줍닌다.
+	if len(array[nx][ny][1]) != 0 :
+		g = get_gun(nx, ny, g)
+
+	# 4. 플레이어 위치 갱신
+	player[num] = [nx, ny, nd, s, g]
+	array[nx][ny][0] = num
+
+def winner_move(num) :
+	"""
+	3. 이긴 플레이어
+	- 승리한 칸에 떨어져 있는 총들과 원래 들고 있던 총 중 가장 공격력이 높은 총을 획득
+	- 나머지 총 격자에 내려 놓음
+	"""
+	x, y, d, s, g = player[num]
+	array[x][y][0] = num # 영역표시
+	if len(array[x][y]) != 0 :
+		g = get_gun(x, y, g)
+	player[num] = [x, y, d, s, g]
+
+
+def player_move(num):
+	x, y, d, s, g = player[num]
+	array[x][y][0] = 0 # 현재 위치의 플레이어 초기화
+
+	# 플레이어의 이동
 	nx = x + dx[d]
 	ny = y + dy[d]
+	if not (0 <= nx < n and 0 <= ny < n):
+		d = (d+2)%4
+		nx = x + dx[d]
+		ny = y + dy[d]
 
-	# 만약 다른 사람이 있으면 90도 회전
-	if location[nx][ny] != 0:
-		nx = nx + dx[(d+1) % 4]
-		ny = ny + dy[(d+1) % 4]
+	# 플레이어의 현재 위치를 표시
+	player[num] = [nx, ny, d, s, g]
 
-	# 이동 갱신
-	players[num] = [nx, ny, d, s, 0]	# 총을 자리에 내려놔야 하기 때문
-	location[nx][ny], location[x][y] = num, 0
+	# 이동한 방향에 플레이어가 없다면
+	if array[nx][ny][0] == 0 :
+		if len(array[nx][ny][1]) != 0:
+			g = get_gun(nx, ny, g)
+		player[num] = [nx, ny, d, s, g] # gun값 갱신
+		array[nx][ny][0] = num 			# array의 위치값 갱신
+
+	# 이동한 방향에 플레이어가 있다면
+	else:
+		winner, loser = fight(num, array[nx][ny][0]) # 이동할 방향의 대상과 싸우기
+		# print("win : ", winner , "lose : ", loser)
+		loser_move(loser)
+		winner_move(winner)
 
 
-def fight(now, target):
-	print("fight")
-	print("now : ",now,  players[now])
-	print("target: ",target,  players[target])
+def fight(a_player, b_player) :
+	"""
+	case2 : 이동한 방향에 플레이어가 있는 경우
+	- 두 플레이어가 싸운다.
+	- 해당 플레이어의 초기 능력치와 가지고 있는 총의 공격력의 합 비교 -> 더 큰 플레이어 승
+	- 능력치가 같은 경우, 초기 능력치가 높은 플레이어 승
+	- POINT : 각 플레이어의 초기 능력치와 가지고 있는 총의 공격력의 합의 차이
+	"""
+	_, _, _, a_s, a_g = player[a_player]
+	_, _, _, b_s, b_g = player[b_player]
 
-	now_x, now_y, now_d, now_s, now_g = players[now]
-	target_x, target_y, _, target_s, target_g = players[target]
-
-	# 초기 능력치 여부여 따라 승패
 	winner, loser = 0, 0
-	if now_s + now_g < target_s + target_g:
-		winner, loser = target, now
-	elif now_s + now_g > target_s + target_g:
-		winner, loser = now, target
+	# 능력치가 같은 경우
+	if (a_s + a_g) == (b_s + b_g) :
+		if a_s > b_s :
+			winner = a_player
+			loser = b_player
+		else :
+			winner = b_player
+			loser = a_player
+	elif (a_s + a_g) > (b_s + b_g) :
+		winner = a_player
+		loser = b_player
 	else:
-		if now_s >= target_s :
-			winner, loser = now, target
-		else:
-			winner, loser = target, now
+		winner = b_player
+		loser = a_player
 
-	loser_move(loser)
-	# winner의 위치 재정의
-	players[winner] = [target_x, target_y, now_d, now_s, now_g]
-	get_gun(winner)
-	location[target_x][target_y], location[now_x][now_y] = winner, 0
+	# 이겼을 경우 포인트 적립
+	points[winner] += (player[winner][3] + player[winner][4]) - (player[loser][3] + player[loser][4])
 
-	points[winner] += abs((target_g + target_s) - (now_g + now_s))
+	return winner, loser
 
 
+points = [0 for _ in range(m+1)]
+for _ in range(k) : # 라운드 회전 시키기
+	# 플레이어의 이동
+	for num in range(m) :
+		# print(num+1)
+		player_move(num+1)
+		# for i in range(n) :
+		# 	print(*array[i])
+		# print(player)
+		# print()
 
-# 이동
-def move(num) :
-	x, y, d, s, g = players[num]
-
-	nx = x + dx[d]
-	ny = y + dy[d]
-
-	# 격자를 벗어날 경우 정반대 방향으로 1만큼 가기
-	if 0 <= nx < n and 0 <= ny < n:
-		pass
-	else:
-		nx = x + dx[(d+2) % 4]
-		ny = y + dy[(d+2) % 4]
-
-	players[num] = [nx, ny, d, s, g]  # 이동에 대한 player 좌표 갱신
-
-	# 이동지에 다른 플레이어가 있다면
-	if location[nx][ny] != 0:
-		fight(num, location[nx][ny])	# 싸우기
-	# 없다면
-	else:
-		location[nx][ny], location[x][y] = num, 0 # 이동 체크
-		get_gun(num) 	# 총 확인하기
-
-
-
-# 라운드 반복
-for _ in range(k):
-
-	# 플레이어 위치 변경
-	for i in range(m):
-		move(i+1)	# player 번호 이동
-
-		print(i+1, '-----------')
-		print(players)
-		print("location : ", location)
-		print("gun : ", array)
-
-	print(array)
-
-
-print(points[1:])
+print(*points[1:])
