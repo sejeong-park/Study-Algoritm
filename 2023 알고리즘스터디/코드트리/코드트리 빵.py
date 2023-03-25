@@ -3,27 +3,6 @@ import sys
 from collections import deque
 import copy
 
-"""
-결과값 -> 총 몇 분 후에 모두 편의점에 도착하는 지
-"""
-"""
-최단 거리
-	- 상하좌우 인접한 칸 중 이동가능한 칸으로만 이동하여, 도달하기까지 거쳐야하는 칸의 수
-"""
-
-"""
-조건 1.
-	- 격자에 있는 사람들이 본인이 가고 싶은 편의점 방향을 향해 1칸 이동
-	- 최단거리 움직이는 방법 여러개 -> 우선순위에 따라 이동
-"""
-
-"""
-조건 2.
-	- 편의점에 도착한다면 해당 편의점에서 멈춤
-	- 이 때부터 다른 사람들은 해당 편의점이 있는 칸을 지날 수 없음
-"""
-
-
 
 n, m = map(int, input().split())
 array = [list(map(int, input().split())) for _ in range(n)]	# 베이스 캠프 지정된 곳
@@ -41,6 +20,10 @@ dx = [-1, 0, 0, 1]
 dy = [0, -1, 1, 0]
 
 def find_min_distance(num) :
+	"""
+	최단 거리
+		- 상하좌우 인접한 칸 중 이동가능한 칸으로만 이동하여, 도달하기까지 거쳐야하는 칸의 수
+	"""
 	""""사람의 현재 위치로부터, 편의점 까지의 최단거리 경로"""
 	person_x, person_y = person_position[num]
 	target_x, target_y = target_position[num]
@@ -127,11 +110,21 @@ def find_basecamp(num) :
 
 
 def simulation(num) :
-	"조건 1과 조건 2가 실행될 경우"
+	# "조건 1과 조건 2가 실행될 경우"
 
+	"""
+	조건 1.
+		- 격자에 있는 사람들이 본인이 가고 싶은 편의점 방향을 향해 1칸 이동
+		- 최단거리 움직이는 방법 여러개 -> 우선순위에 따라 이동
+	"""
 	nx, ny = find_min_distance(num)
 	person_position[num] = [nx,ny]	# 새로 이동한 번호 넣기
-	# print(nx, ny)
+
+	"""
+	조건 2.
+		- 편의점에 도착한다면 해당 편의점에서 멈춤
+		- 이 때부터 다른 사람들은 해당 편의점이 있는 칸을 지날 수 없음
+	"""
 	if [nx, ny] == target_position[num] :
 		del person_position[num]
 		array[nx][ny] = -1
@@ -167,5 +160,7 @@ while True :
 	# print(person_position)
 	time += 1
 
-
+"""
+결과값 -> 총 몇 분 후에 모두 편의점에 도착하는 지
+"""
 print(time-1)
